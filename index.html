@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruby Code</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            /* Color Palette */
+            --bg: #0D0D0D;
+            --surface: #161616;
+            --surface-2: #1E1E1E;
+            --border: #2A2A2A;
+            --primary: #B00020;
+            --accent: #E53935;
+            --text: #FFFFFF;
+            --muted: #A1A1AA;
+            
+            /* Layout & Effects */
+            --glass-bg: rgba(22, 22, 22, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --radius-bubble: 18px;
+            --radius-dock: 24px;
+            --transition: 250ms cubic-bezier(0.32, 0.72, 0, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+        }
+
+        .app-layout {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            transition: width var(--transition);
+            z-index: 10;
+        }
+
+        .sidebar.collapsed { width: 80px; }
+        .sidebar.collapsed .brand-text, 
+        .sidebar.collapsed .sidebar-actions,
+        .sidebar.collapsed .sidebar-content,
+        .sidebar.collapsed .menu-item span { display: none; }
+
+        .sidebar-header {
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon { color: var(--primary); width: 24px; height: 24px; }
+        .brand-text {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            letter-spacing: 2px;
+            font-size: 14px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            transition: color var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            border-radius: 8px;
+        }
+        .icon-btn:hover { color: var(--text); background: var(--surface-2); }
+
+        .sidebar-actions { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: var(--text);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: opacity var(--transition);
+        }
+        .btn-primary:hover { opacity: 0.9; }
+        .full-width { width: 100%; }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            gap: 8px;
+        }
+        .search-box input {
+            background: none; border: none; color: var(--text); outline: none; width: 100%;
+        }
+        .search-box i { color: var(--muted); width: 16px; height: 16px; }
+
+        .sidebar-content { flex: 1; padding: 0 16px; overflow-y: auto; }
+        .group-label { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 600; }
+        .history-list { list-style: none; margin-top: 8px; }
+
+        .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
+        .menu-item {
+            display: flex; align-items: center; gap: 12px;
+            background: none; border: none; color: var(--muted);
+            width: 100%; padding: 10px; cursor: pointer;
+            border-radius: 8px; transition: var(--transition);
+        }
+        .menu-item:hover { color: var(--text); background: var(--surface-2); }
+
+        /* Main Content */
+        .main-content {
+            flex: 1; display: flex; flex-direction: column; position: relative;
+        }
+
+        .top-nav {
+            height: 56px; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 24px; position: absolute; top: 0; left: 0; right: 0; z-index: 5;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tagline { font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--muted); }
+
+        .connection-status { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+        .status-dot.active { background: #22C55E; box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
+
+        .chat-container {
+            flex: 1; margin-top: 56px; overflow-y: auto;
+            display: flex; flex-direction: column; align-items: center; padding: 40px 20px 120px;
+        }
+
+        .empty-state {
+            margin: auto; text-align: center; color: var(--muted);
+        }
+        .empty-icon { width: 48px; height: 48px; color: var(--border); margin-bottom: 16px; }
+
+        .messages {
+            width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 24px;
+        }
+
+        .message {
+            display: flex; flex-direction: column; gap: 8px; max-width: 85%;
+        }
+        .message.user { align-self: flex-end; }
+        .message.assistant { align-self: flex-start; }
+
+        .bubble {
+            padding: 16px 20px; border-radius: var(--radius-bubble); line-height: 1.6; white-space: pre-wrap;
+        }
+        .message.user .bubble {
+            background: var(--surface-2); border-bottom-right-radius: 4px;
+        }
+        .message.assistant .bubble {
+            background: var(--surface); border: 1px solid var(--glass-border); border-bottom-left-radius: 4px;
+        }
+
+        /* Input Dock */
+        .input-dock-container {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 24px; background: linear-gradient(transparent, var(--bg) 60%);
+        }
+
+        .input-dock {
+            width: 100%; max-width: 800px; border-radius: var(--radius-dock);
+            display: flex; align-items: flex-end; padding: 12px 16px; gap: 12px;
+        }
+
+        .input-dock textarea {
+            flex: 1; background: none; border: none; color: var(--text);
+            resize: none; outline: none; font-family: inherit; font-size: 15px;
+            max-height: 150px; padding: 8px 0;
+        }
+
+        .send-btn {
+            background: var(--primary); color: #fff; border: none;
+            width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: var(--transition); flex-shrink: 0;
+        }
+        .send-btn:disabled { background: var(--surface-2); color: var(--muted); cursor: not-allowed; }
+        .send-btn:not(:disabled):hover { background: var(--accent); transform: scale(1.05); }
+
+        .disclaimer { font-size: 11px; color: var(--muted); margin-top: 12px; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity var(--transition); z-index: 100;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+
+        .modal {
+            width: 100%; max-width: 480px; border-radius: var(--radius-dock); padding: 24px;
+            transform: translateY(20px); transition: transform var(--transition);
+        }
+        .modal-overlay.active .modal { transform: translateY(0); }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .form-group { margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-size: 13px; font-weight: 500; color: var(--muted); }
+        .form-group input, .form-group select {
+            background: var(--surface-2); border: 1px solid var(--border);
+            color: var(--text); padding: 12px; border-radius: 8px; outline: none; width: 100%;
+        }
+        .form-row { display: flex; gap: 16px; }
+        .form-row .form-group { flex: 1; }
+        .helper-link { font-size: 12px; color: var(--primary); text-decoration: none; }
+        .modal-footer { margin-top: 24px; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i data-lucide="gem" class="brand-icon"></i>
+                    <span class="brand-text">RUBY CODE</span>
+                </div>
+                <button class="icon-btn" id="toggle-sidebar" aria-label="Toggle Sidebar">
+                    <i data-lucide="panel-left-close"></i>
+                </button>
+            </div>
+
+            <div class="sidebar-actions">
+                <button class="btn-primary full-width" id="new-chat-btn">
+                    <i data-lucide="plus"></i> New Chat
+                </button>
+                <div class="search-box">
+                    <i data-lucide="search"></i>
+                    <input type="text" placeholder="Search history...">
+                </div>
+            </div>
+
+            <div class="sidebar-content">
+                <div class="history-group">
+                    <span class="group-label">Recent</span>
+                    <ul class="history-list" id="history-list">
+                        <!-- History injected via JS -->
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button class="menu-item" id="open-settings-btn">
+                    <i data-lucide="settings"></i>
+                    <span>Settings</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Nav -->
+            <header class="top-nav glass-panel">
+                <div class="nav-left">
+                    <span class="tagline">Code in Red.</span>
+                </div>
+                <div class="nav-right">
+                    <div class="connection-status" id="connection-status">
+                        <div class="status-dot"></div>
+                        <span class="status-text">Disconnected</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Chat Area -->
+            <div class="chat-container" id="chat-container">
+                <div class="empty-state" id="empty-state">
+                    <i data-lucide="gem" class="empty-icon"></i>
+                    <h2>How can I help you code today?</h2>
+                </div>
+                <div class="messages" id="messages"></div>
+            </div>
+
+            <!-- Input Dock -->
+            <div class="input-dock-container">
+                <div class="input-dock glass-panel">
+                    <textarea id="chat-input" placeholder="Message Ruby Code..." rows="1"></textarea>
+                    <button class="send-btn" id="send-btn" disabled>
+                        <i data-lucide="send"></i>
+                    </button>
+                </div>
+                <div class="disclaimer">Powered by OpenRouter</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal glass-panel">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="icon-btn" id="close-settings-btn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>OpenRouter API Key</label>
+                    <input type="password" id="api-key-input" placeholder="sk-or-v1-...">
+                    <a href="https://openrouter.ai/keys" target="_blank" class="helper-link">Get your key here</a>
+                </div>
+                <div class="form-group">
+                    <label>Model</label>
+                    <select id="model-select" disabled>
+                        <option value="">Enter API Key to load models...</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Temperature (<span id="temp-val">0.7</span>)</label>
+                        <input type="range" id="temp-input" min="0" max="2" step="0.1" value="0.7">
+                    </div>
+                    <div class="form-group">
+                        <label>Max Tokens</label>
+                        <input type="number" id="tokens-input" value="4096">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="save-settings-btn">Save Configuration</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Combined JavaScript -->
+    <script>
+        // --- OpenRouter Logic ---
+        const API_BASE = 'https://openrouter.ai/api/v1';
+
+        class OpenRouterClient {
+            constructor() {
+                this.apiKey = localStorage.getItem('ruby_code_openrouter_key') || '';
+                this.headers = {
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': 'https://ruby-code.app',
+                    'X-Title': 'Ruby Code'
+                };
+            }
+
+            setKey(key) {
+                this.apiKey = key;
+                localStorage.setItem('ruby_code_openrouter_key', key);
+            }
+
+            hasKey() {
+                return this.apiKey.length > 0;
+            }
+
+            getHeaders() {
+                return {
+                    ...this.headers,
+                    'Authorization': `Bearer ${this.apiKey}`
+                };
+            }
+
+            async fetchModels() {
+                if (!this.hasKey()) throw new Error('API Key missing');
+                const res = await fetch(`${API_BASE}/models`, {
+                    method: 'GET',
+                    headers: this.getHeaders()
+                });
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                const data = await res.json();
+                return data.data; 
+            }
+
+            async streamChat(messages, config, onChunk, onError, onComplete) {
+                if (!this.hasKey()) {
+                    onError('Missing API Key. Please configure Settings.');
+                    return;
+                }
+
+                const payload = {
+                    model: config.model,
+                    messages: messages,
+                    temperature: config.temperature,
+                    max_tokens: config.maxTokens,
+                    stream: true
+                };
+
+                try {
+                    const response = await fetch(`${API_BASE}/chat/completions`, {
+                        method: 'POST',
+                        headers: this.getHeaders(),
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 401) throw new Error('Unauthorized - Invalid API Key');
+                        if (response.status === 402) throw new Error('Payment Required - Check OpenRouter balance');
+                        if (response.status === 429) throw new Error('Rate Limited - Too many requests');
+                        throw new Error(`API Error: ${response.status}`);
+                    }
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) {
+                            onComplete();
+                            break;
+                        }
+                        
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop(); // Keep incomplete line in buffer
+
+                        for (const line of lines) {
+                            const trimmed = line.trim();
+                            if (!trimmed || trimmed.startsWith(':')) continue;
+                            if (trimmed === 'data: [DONE]') {
+                                onComplete();
+                                return;
+                            }
+                            if (trimmed.startsWith('data: ')) {
+                                try {
+                                    const data = JSON.parse(trimmed.slice(6));
+                                    const content = data.choices[0]?.delta?.content;
+                                    if (content) onChunk(content);
+                                } catch (e) {
+                                    console.error('SSE Parse Error:', e, trimmed);
+                                }
+                            }
+                        }
+                    }
+                } catch (error) {
+                    onError(error.message);
+                }
+            }
+        }
+
+        // --- Application Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Icons
+            lucide.createIcons();
+
+            const client = new OpenRouterClient();
+            let currentMessages = [];
+            
+            // DOM Elements
+            const elements = {
+                sidebar: document.getElementById('sidebar'),
+                toggleSidebar: document.getElementById('toggle-sidebar'),
+                chatInput: document.getElementById('chat-input'),
+                sendBtn: document.getElementById('send-btn'),
+                messagesContainer: document.getElementById('messages'),
+                emptyState: document.getElementById('empty-state'),
+                settingsModal: document.getElementById('settings-modal'),
+                openSettingsBtn: document.getElementById('open-settings-btn'),
+                closeSettingsBtn: document.getElementById('close-settings-btn'),
+                saveSettingsBtn: document.getElementById('save-settings-btn'),
+                apiKeyInput: document.getElementById('api-key-input'),
+                modelSelect: document.getElementById('model-select'),
+                tempInput: document.getElementById('temp-input'),
+                tempVal: document.getElementById('temp-val'),
+                tokensInput: document.getElementById('tokens-input'),
+                statusDot: document.querySelector('.status-dot'),
+                statusText: document.querySelector('.status-text')
+            };
+
+            // Configuration State
+            const config = {
+                model: localStorage.getItem('ruby_code_model') || 'anthropic/claude-3.5-sonnet',
+                temperature: parseFloat(localStorage.getItem('ruby_code_temp')) || 0.7,
+                maxTokens: parseInt(localStorage.getItem('ruby_code_tokens')) || 4096
+            };
+
+            // --- Initialization ---
+            initSettings();
+            updateConnectionStatus();
+
+            // --- Event Listeners ---
+            elements.toggleSidebar.addEventListener('click', () => {
+                elements.sidebar.classList.toggle('collapsed');
+            });
+
+            elements.chatInput.addEventListener('input', (e) => {
+                e.target.style.height = 'auto';
+                e.target.style.height = (e.target.scrollHeight) + 'px';
+                elements.sendBtn.disabled = e.target.value.trim().length === 0;
+            });
+
+            elements.chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (!elements.sendBtn.disabled) handleSend();
+                }
+            });
+
+            elements.sendBtn.addEventListener('click', handleSend);
+
+            // Settings Modal
+            elements.openSettingsBtn.addEventListener('click', () => elements.settingsModal.classList.add('active'));
+            elements.closeSettingsBtn.addEventListener('click', () => elements.settingsModal.classList.remove('active'));
+            
+            elements.tempInput.addEventListener('input', (e) => {
+                elements.tempVal.textContent = e.target.value;
+            });
+
+            elements.saveSettingsBtn.addEventListener('click', async () => {
+                const key = elements.apiKeyInput.value.trim();
+                if (key) client.setKey(key);
+                
+                config.model = elements.modelSelect.value;
+                config.temperature = parseFloat(elements.tempInput.value);
+                config.maxTokens = parseInt(elements.tokensInput.value);
+                
+                localStorage.setItem('ruby_code_model', config.model);
+                localStorage.setItem('ruby_code_temp', config.temperature);
+                localStorage.setItem('ruby_code_tokens', config.maxTokens);
+                
+                updateConnectionStatus();
+                elements.settingsModal.classList.remove('active');
+                
+                if (client.hasKey()) await loadModels();
+            });
+
+            // --- Core Functions ---
+            async function initSettings() {
+                if (client.hasKey()) {
+                    elements.apiKeyInput.value = client.apiKey;
+                    await loadModels();
+                }
+                elements.tempInput.value = config.temperature;
+                elements.tempVal.textContent = config.temperature;
+                elements.tokensInput.value = config.maxTokens;
+            }
+
+            async function loadModels() {
+                elements.modelSelect.disabled = true;
+                elements.modelSelect.innerHTML = '<option>Loading models...</option>';
+                try {
+                    const models = await client.fetchModels();
+                    elements.modelSelect.innerHTML = '';
+                    
+                    const defaultModels = ['anthropic/claude-3.5-sonnet', 'openai/gpt-4o-mini', 'meta-llama/llama-3-70b-instruct'];
+                    
+                    models.sort((a, b) => {
+                        const aFree = a.pricing?.prompt === "0";
+                        const bFree = b.pricing?.prompt === "0";
+                        if (aFree && !bFree) return -1;
+                        if (!aFree && bFree) return 1;
+                        return 0;
+                    }).forEach(m => {
+                        const opt = document.createElement('option');
+                        opt.value = m.id;
+                        opt.textContent = `${m.name} ${m.pricing?.prompt === "0" ? '(Free)' : ''}`;
+                        if (m.id === config.model || defaultModels.includes(m.id)) {
+                            opt.selected = m.id === config.model;
+                        }
+                        elements.modelSelect.appendChild(opt);
+                    });
+                    elements.modelSelect.disabled = false;
+                } catch (e) {
+                    elements.modelSelect.innerHTML = '<option value="">Error loading models</option>';
+                }
+            }
+
+            function updateConnectionStatus() {
+                if (client.hasKey()) {
+                    elements.statusDot.classList.add('active');
+                    elements.statusText.textContent = 'Connected to OpenRouter';
+                } else {
+                    elements.statusDot.classList.remove('active');
+                    elements.statusText.textContent = 'Setup Required';
+                }
+            }
+
+            function appendMessage(role, content) {
+                elements.emptyState.style.display = 'none';
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `message ${role}`;
+                
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                bubble.textContent = content; 
+                
+                msgDiv.appendChild(bubble);
+                elements.messagesContainer.appendChild(msgDiv);
+                
+                // Auto scroll
+                const chatContainer = document.getElementById('chat-container');
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                return bubble;
+            }
+
+            async function handleSend() {
+                const text = elements.chatInput.value.trim();
+                if (!text) return;
+
+                // Reset input
+                elements.chatInput.value = '';
+                elements.chatInput.style.height = 'auto';
+                elements.sendBtn.disabled = true;
+
+                // Add user message
+                appendMessage('user', text);
+                currentMessages.push({ role: 'user', content: text });
+
+                // Add assistant placeholder
+                const assistantBubble = appendMessage('assistant', '');
+                let assistantContent = '';
+
+                elements.chatInput.disabled = true;
+
+                await client.streamChat(
+                    [{ role: 'system', content: 'You are Ruby Code, a premium AI coding assistant.' }, ...currentMessages],
+                    config,
+                    (chunk) => {
+                        assistantContent += chunk;
+                        assistantBubble.textContent = assistantContent;
+                        // Auto scroll during streaming
+                        const chatContainer = document.getElementById('chat-container');
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    },
+                    (errorMsg) => {
+                        assistantBubble.textContent = `Error: ${errorMsg}`;
+                        assistantBubble.style.color = 'var(--accent)';
+                        elements.chatInput.disabled = false;
+                    },
+                    () => {
+                        currentMessages.push({ role: 'assistant', content: assistantContent });
+                        elements.chatInput.disabled = false;
+                        elements.chatInput.focus();
+                    }
+                );
+            }
+        });
+    </script>
+</body>
+</html>
