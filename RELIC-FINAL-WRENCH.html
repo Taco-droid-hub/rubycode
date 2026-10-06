@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RELIC</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css">
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+:root { --bg:#0F0F0F; --bg2:#181818; --border:#2A2A2A; --fg:#FFF; --muted:#8A8A8A; --bubble-user:#FFF; --bubble-user-fg:#000; --bubble-ai:#1A1A1A; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--fg); font-family:'DM Sans',sans-serif; height:100vh; height:100dvh; display:flex; flex-direction:column; overflow:hidden; }
+header { display:flex; flex-direction:row; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--bg); border-bottom:1px solid var(--border); flex-shrink:0; }
+.header-left { display:flex; align-items:center; gap:10px; }
+.header-logo { width:36px; height:36px; aspect-ratio:1/1; border-radius:10px; background:#000; border:1px solid var(--border); overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.header-logo img { width:100%; height:100%; object-fit:cover; }
+.header-title { font-family:'Orbitron',sans-serif; font-weight:800; font-size:18px; letter-spacing:2px; }
+.header-right { display:flex; align-items:center; gap:8px; margin-left:auto; }
+.icon-btn { width:36px; height:36px; border-radius:10px; border:1px solid var(--border); background:transparent; color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.icon-btn:hover { background:var(--bg2); }
+#chat-container { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:16px; }
+#welcome { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
+.welcome-logo { width:84px; height:84px; aspect-ratio:1/1; border-radius:22px; background:#000; border:1px solid var(--border); overflow:hidden; margin-bottom:16px; }
+.welcome-logo img { width:100%; height:100%; object-fit:cover; }
+.welcome-title { font-family:'Orbitron',sans-serif; font-weight:900; font-size:34px; letter-spacing:4px; margin-bottom:8px; }
+.welcome-sub { color:var(--muted); font-size:14px; margin-bottom:28px; text-align:center; }
+.suggestions { display:flex; flex-direction:column; gap:10px; width:100%; max-width:340px; }
+.chip { padding:13px 18px; border-radius:999px; border:1px solid var(--border); background:var(--bg2); color:#fff; font-size:13px; text-align:center; cursor:pointer; }
+.chip:hover { border-color:#444; }
+.message { max-width:85%; padding:12px 16px; border-radius:18px; line-height:1.5; font-size:14px; word-wrap:break-word; }
+.message.user { align-self:flex-end; background:var(--bubble-user); color:var(--bubble-user-fg); border-bottom-right-radius:6px; }
+.message.ai { align-self:flex-start; background:var(--bubble-ai); color:#fff; border:1px solid var(--border); border-bottom-left-radius:6px; }
+.message.ai pre { background:#0D1117; padding:12px; border-radius:8px; overflow-x:auto; margin:8px 0; }
+#input-area { display:flex; flex-direction:row; align-items:center; gap:10px; padding:12px 16px; border-top:1px solid var(--border); background:var(--bg); flex-shrink:0; }
+#input-wrapper { flex:1; display:flex; align-items:center; background:var(--bg2); border:1px solid var(--border); border-radius:24px; padding:6px 14px; min-width:0; }
+#input-wrapper textarea { flex:1; background:transparent; border:none; color:#fff; font-size:14px; padding:10px 0; outline:none; resize:none; min-height:20px; max-height:120px; font-family:inherit; }
+#send-btn { width:44px; height:44px; min-width:44px; aspect-ratio:1/1; border-radius:50%; border:1px solid var(--border); background:var(--bg2); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; z-index:100; padding:20px; }
+.modal-overlay.hidden { display:none; }
+.modal-card { background:#181818; border:1px solid #2A2A2A; border-radius:16px; width:100%; max-width:480px; max-height:80vh; overflow:hidden; display:flex; flex-direction:column; }
+.modal-header { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid #2A2A2A; }
+.modal-header h2 { font-family:'Orbitron',sans-serif; font-size:16px; letter-spacing:1px; }
+.modal-close { width:32px; height:32px; border-radius:8px; border:1px solid #2A2A2A; background:transparent; color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.modal-body { padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:20px; }
+.settings-section-title { font-size:12px; letter-spacing:1px; text-transform:uppercase; color:#8A8A8A; margin-bottom:12px; font-weight:600; }
+.field-group { display:flex; flex-direction:column; gap:6px; }
+.field-label { font-size:13px; color:#fff; }
+.field-input { background:#0F0F0F; border:1px solid #2A2A2A; border-radius:10px; padding:10px 12px; color:#fff; font-size:13px; outline:none; font-family:inherit; }
+.field-input:focus { border-color:#444; }
+.field-hint { font-size:11px; color:#666; }
+.modal-footer { padding:16px 20px; border-top:1px solid #2A2A2A; display:flex; gap:10px; justify-content:flex-end; }
+.btn { padding:10px 18px; border-radius:10px; border:1px solid #2A2A2A; font-size:13px; cursor:pointer; font-family:inherit; }
+.btn-primary { background:#fff; color:#000; border-color:#fff; font-weight:600; }
+.btn-secondary { background:transparent; color:#fff; }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-left">
+    <div class="header-logo"><img src="https://www.image2url.com/r2/default/images/1791279213230-bc889825-e50c-414f-86de-5b43d65ebc39.jpg" alt="relic"></div>
+    <div class="header-title">RELIC</div>
+  </div>
+  <div class="header-right">
+    <button class="icon-btn" id="master-prompt-btn" title="Master Prompt"><i data-lucide="wrench" style="width:16px;height:16px"></i></button>
+    <button class="icon-btn" id="new-chat-btn" title="New Chat"><i data-lucide="plus" style="width:16px;height:16px"></i></button>
+    <button class="icon-btn" id="theme-btn" title="Theme"><i data-lucide="sun" style="width:16px;height:16px"></i></button>
+    <button class="icon-btn" id="settings-btn" title="Settings"><i data-lucide="settings" style="width:16px;height:16px"></i></button>
+  </div>
+</header>
+
+<div id="chat-container">
+  <div id="welcome">
+    <div class="welcome-logo"><img src="https://www.image2url.com/r2/default/images/1791279213230-bc889825-e50c-414f-86de-5b43d65ebc39.jpg" alt="relic"></div>
+    <div class="welcome-title">RELIC</div>
+    <div class="welcome-sub">Your AI coding companion. Ask anything.</div>
+    <div class="suggestions">
+      <div class="chip" data-prompt="Explain async/await in JavaScript">Explain async/await in JavaScript</div>
+      <div class="chip" data-prompt="Write a Python binary search">Write a Python binary search</div>
+      <div class="chip" data-prompt="Rust vs Go for backend">Rust vs Go for backend</div>
+      <div class="chip" data-prompt="Responsive navbar with CSS">Responsive navbar with CSS</div>
+    </div>
+  </div>
+</div>
+
+<div id="input-area">
+  <div id="input-wrapper"><textarea id="message-input" placeholder="Message Relic..." rows="1"></textarea></div>
+  <button id="send-btn"><i data-lucide="arrow-up" style="width:18px;height:18px"></i></button>
+</div>
+
+<div id="master-modal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <div class="modal-header"><h2>Master Prompt</h2><button class="modal-close" id="master-close-btn"><i data-lucide="x" style="width:16px;height:16px"></i></button></div>
+    <div class="modal-body">
+      <div class="settings-section">
+        <div class="settings-section-title">System Instruction</div>
+        <div class="field-group">
+          <label class="field-label">Master Prompt</label>
+          <textarea id="master-prompt-input" class="field-input" style="min-height:160px; resize:vertical;" placeholder="You are RELIC, an expert coding assistant..."></textarea>
+          <div class="field-hint">Instruksi utama yang akan selalu dipakai AI di setiap chat.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" id="master-cancel">Cancel</button><button class="btn btn-primary" id="master-save">Save</button></div>
+  </div>
+</div>
+
+<div id="settings-modal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <div class="modal-header"><h2>Settings</h2><button class="modal-close" id="modal-close-btn"><i data-lucide="x" style="width:16px;height:16px"></i></button></div>
+    <div class="modal-body">
+      <div class="settings-section">
+        <div class="settings-section-title">API Configuration</div>
+        <div class="field-group"><label class="field-label">API Key</label><input type="password" id="setting-api-key" class="field-input" placeholder="sk-or-..."><div class="field-hint">OpenRouter API key. Stored locally.</div></div>
+        <div class="field-group"><label class="field-label">Model</label><input type="text" id="setting-model" class="field-input" placeholder="openai/gpt-4o-mini"></div>
+        <div class="field-group"><label class="field-label">Base URL</label><input type="text" id="setting-base-url" class="field-input" placeholder="https://openrouter.ai/api/v1/chat/completions"></div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-title">Generation</div>
+        <div class="field-group"><label class="field-label">Temperature</label><input type="number" id="setting-temp" class="field-input" step="0.1" min="0" max="2" value="0.7"></div>
+        <div class="field-group"><label class="field-label">Max Tokens</label><input type="number" id="setting-max" class="field-input" value="2048"></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" id="modal-cancel">Cancel</button><button class="btn btn-primary" id="modal-save">Save</button></div>
+  </div>
+</div>
+
+<script>
+lucide.createIcons();
+const $ = s => document.querySelector(s);
+const chatContainer = $('#chat-container');
+const welcome = $('#welcome');
+const messageInput = $('#message-input');
+const sendBtn = $('#send-btn');
+const settingsModal = $('#settings-modal');
+const masterModal = $('#master-modal');
+let messages = [];
+
+function loadSettings(){
+  return {
+    apiKey: localStorage.getItem('relic_api_key') || '',
+    model: localStorage.getItem('relic_model') || 'openai/gpt-4o-mini',
+    baseUrl: localStorage.getItem('relic_base_url') || 'https://openrouter.ai/api/v1/chat/completions',
+    temp: localStorage.getItem('relic_temp') || '0.7',
+    max: localStorage.getItem('relic_max') || '2048'
+  };
+}
+function saveSettings(s){
+  localStorage.setItem('relic_api_key', s.apiKey);
+  localStorage.setItem('relic_model', s.model);
+  localStorage.setItem('relic_base_url', s.baseUrl);
+  localStorage.setItem('relic_temp', s.temp);
+  localStorage.setItem('relic_max', s.max);
+}
+function openSettings(){
+  const s = loadSettings();
+  $('#setting-api-key').value = s.apiKey;
+  $('#setting-model').value = s.model;
+  $('#setting-base-url').value = s.baseUrl;
+  $('#setting-temp').value = s.temp;
+  $('#setting-max').value = s.max;
+  settingsModal.classList.remove('hidden');
+}
+function closeSettings(){ settingsModal.classList.add('hidden'); }
+function openMaster(){
+  $('#master-prompt-input').value = localStorage.getItem('relic_master_prompt') || 'You are RELIC, an expert AI coding companion. Helpful, concise, and direct.';
+  masterModal.classList.remove('hidden');
+}
+function closeMaster(){ masterModal.classList.add('hidden'); }
+
+$('#settings-btn').addEventListener('click', openSettings);
+$('#modal-close-btn').addEventListener('click', closeSettings);
+$('#modal-cancel').addEventListener('click', closeSettings);
+$('#modal-save').addEventListener('click', ()=>{
+  saveSettings({
+    apiKey: $('#setting-api-key').value.trim(),
+    model: $('#setting-model').value.trim() || 'openai/gpt-4o-mini',
+    baseUrl: $('#setting-base-url').value.trim() || 'https://openrouter.ai/api/v1/chat/completions',
+    temp: $('#setting-temp').value,
+    max: $('#setting-max').value
+  });
+  closeSettings();
+});
+settingsModal.addEventListener('click', e=>{ if(e.target===settingsModal) closeSettings(); });
+
+$('#master-prompt-btn').addEventListener('click', openMaster);
+$('#master-close-btn').addEventListener('click', closeMaster);
+$('#master-cancel').addEventListener('click', closeMaster);
+$('#master-save').addEventListener('click', ()=>{
+  localStorage.setItem('relic_master_prompt', $('#master-prompt-input').value.trim());
+  closeMaster();
+});
+masterModal.addEventListener('click', e=>{ if(e.target===masterModal) closeMaster(); });
+
+function addMessage(role, content){
+  if(welcome) welcome.style.display='none';
+  const div = document.createElement('div');
+  div.className = 'message ' + role;
+  if(role==='ai'){
+    div.innerHTML = marked.parse(content);
+    div.querySelectorAll('pre code').forEach(b=>hljs.highlightElement(b));
+  } else {
+    div.textContent = content;
+  }
+  chatContainer.appendChild(div);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+  return div;
+}
+
+async function sendMessage(){
+  const text = messageInput.value.trim();
+  if(!text) return;
+  const s = loadSettings();
+  if(!s.apiKey){ openSettings(); alert('Masukin API Key dulu bre di Settings!'); return; }
+  
+  addMessage('user', text);
+  const masterPrompt = localStorage.getItem('relic_master_prompt') || 'You are RELIC, an expert AI coding companion.';
+  const apiMessages = [];
+  if(masterPrompt) apiMessages.push({role:'system', content: masterPrompt});
+  apiMessages.push(...messages);
+  apiMessages.push({role:'user', content:text});
+  
+  messages.push({role:'user', content:text});
+  messageInput.value='';
+  messageInput.style.height='auto';
+  
+  const aiDiv = addMessage('ai', '... thinking ...');
+  
+  try{
+    const res = await fetch(s.baseUrl, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+s.apiKey },
+      body: JSON.stringify({
+        model: s.model,
+        messages: apiMessages,
+        temperature: parseFloat(s.temp),
+        max_tokens: parseInt(s.max)
+      })
+    });
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content || 'Error: ' + JSON.stringify(data).slice(0,300);
+    aiDiv.innerHTML = marked.parse(reply);
+    aiDiv.querySelectorAll('pre code').forEach(b=>hljs.highlightElement(b));
+    messages.push({role:'assistant', content:reply});
+  } catch(err){
+    aiDiv.textContent = 'Error: ' + err.message;
+  }
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+sendBtn.addEventListener('click', sendMessage);
+messageInput.addEventListener('keydown', e=>{
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+});
+messageInput.addEventListener('input', ()=>{
+  messageInput.style.height='auto';
+  messageInput.style.height=messageInput.scrollHeight+'px';
+});
+document.querySelectorAll('.chip').forEach(c=>{
+  c.addEventListener('click', ()=>{ messageInput.value=c.dataset.prompt; sendMessage(); });
+});
+$('#new-chat-btn').addEventListener('click', ()=>{
+  messages=[]; chatContainer.innerHTML=''; 
+  chatContainer.appendChild(welcome); welcome.style.display='flex';
+});
+$('#theme-btn').addEventListener('click', ()=>{
+  const isDark = document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme', isDark?'light':'dark');
+  document.body.style.background = isDark ? '#fff' : '#0F0F0F';
+  document.body.style.color = isDark ? '#000' : '#fff';
+});
+</script>
+</body>
+</html>
